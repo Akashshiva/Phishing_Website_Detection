@@ -925,122 +925,91 @@ with tab_overview:
 
 with tab_compare:
 
-    st.markdown("### 📊 Model Performance Comparison")
+    st.markdown("### Comparative Model Performance")
 
-    # Select evaluation metrics
-    selected_metrics = st.multiselect(
-        "Choose evaluation metrics",
-        options=list(comparison_df.columns),
-        default=[
-            "Accuracy",
-            "AUC",
-            "Precision",
-            "Recall",
-            "F1 Score"
+    if len(all_results) < 2:
+
+        st.info(
+            "Select 'Compare All Models' from the sidebar "
+            "to view all five classifiers together."
+        )
+
+    else:
+
+        comparison_df = pd.DataFrame({
+            name: result["metrics"]
+            for name, result in all_results.items()
+        }).T
+
+        st.dataframe(
+            comparison_df.style.format(
+                "{:.4f}"
+            ).highlight_max(
+                axis=0,
+                color="#145C50"
+            ),
+            use_container_width=True
+        )
+
+        st.markdown("### Performance Visualization")
+
+        selected_metrics = st.multiselect(
+            "Choose metrics",
+            list(comparison_df.columns),
+            default=[
+                "Accuracy",
+                "AUC",
+                "Precision",
+                "Recall",
+                "F1 Score"
+            ]
+        )
+
+        if selected_metrics:
+          # Define chart colors for different metrics
+          chart_colors = [
+              "#20BFA8",
+              "#3B82F6",
+              "#A78BFA",
+              "#F59E0B",
+              "#F472B6",
+              "#22D3EE"
+          ]
+
+          # Display interactive comparison chart
+          st.bar_chart(
+              comparison_df,
+              y=selected_metrics,
+              color=chart_colors[:len(selected_metrics)],
+              horizontal=True,
+              stack=False,
+              sort=False,
+              height=550,
+              width="stretch"
+              x_label="Model Performance Score",
+              y_label="Machine Learning Models"
+          )
+
+        st.markdown("### Model Ranking")
+
+        ranking = comparison_df.sort_values(
+            by="F1 Score",
+            ascending=False
+        )
+
+        ranking_display = ranking[
+            ["Accuracy", "AUC", "F1 Score", "MCC"]
         ]
-    )
 
-    if selected_metrics:
-
-        # Define metric colors
-        metric_colors = {
-            "Accuracy": "#20BFA8",
-            "AUC": "#3B82F6",
-            "Precision": "#A78BFA",
-            "Recall": "#F59E0B",
-            "F1 Score": "#F472B6",
-            "MCC": "#22D3EE"
-        }
-
-        # Create grouped vertical bar chart
-        fig, ax = plt.subplots(figsize=(13, 6))
-
-        models = comparison_df.index.tolist()
-
-        x = np.arange(len(models))
-
-        total_width = 0.8
-        bar_width = total_width / len(selected_metrics)
-
-        # Plot each selected metric
-        for i, metric in enumerate(selected_metrics):
-
-            offset = (
-                i - (len(selected_metrics) - 1) / 2
-            ) * bar_width
-
-            positions = x + offset
-
-            ax.bar(
-                positions,
-                comparison_df[metric].values,
-                width=bar_width * 0.9,
-                label=metric,
-                color=metric_colors[metric],
-                edgecolor="white",
-                linewidth=0.3
-            )
-
-        # Chart formatting
-        ax.set_title(
-            "Machine Learning Model Performance Comparison",
-            fontsize=15,
-            fontweight="bold",
-            pad=18
+        st.dataframe(
+            ranking_display.style.format("{:.4f}"),
+            use_container_width=True
         )
 
-        ax.set_xlabel(
-            "Classification Models",
-            fontsize=11,
-            fontweight="bold",
-            labelpad=12
-        )
+        best_name = ranking.index[0]
 
-        ax.set_ylabel(
-            "Performance Score",
-            fontsize=11,
-            fontweight="bold",
-            labelpad=12
-        )
-
-        ax.set_xticks(x)
-        ax.set_xticklabels(
-            models,
-            rotation=15,
-            ha="right"
-        )
-
-        # MCC can range from -1 to 1
-        lower_limit = -1 if "MCC" in selected_metrics else 0
-        ax.set_ylim(lower_limit, 1.05)
-
-        ax.grid(
-            axis="y",
-            linestyle="--",
-            alpha=0.25
-        )
-
-        ax.set_axisbelow(True)
-
-        ax.legend(
-            title="Evaluation Metrics",
-            loc="upper center",
-            bbox_to_anchor=(0.5, -0.20),
-            ncol=3,
-            frameon=False
-        )
-
-        fig.tight_layout()
-
-        # Display chart
-        st.pyplot(fig, use_container_width=True)
-
-        plt.close(fig)
-
-        st.caption(
-            "Compare the performance of all five classifiers. "
-            "Higher scores indicate better performance, "
-            "while MCC ranges from -1 to +1."
+        st.success(
+            f"🏆 Highest Testing F1 Score: {best_name}"
         )
 
 
