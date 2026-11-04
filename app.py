@@ -981,6 +981,10 @@ with tab_compare:
               comparison_df,
               y=selected_metrics,
               color=chart_colors[:len(selected_metrics)],
+              horizontal=True,
+              stack=False,
+              sort=False,
+              height=550,
               width="stretch"
           )
 
