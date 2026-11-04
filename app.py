@@ -542,21 +542,8 @@ st.sidebar.markdown("### 📁 Dataset Upload")
 uploaded_file = st.sidebar.file_uploader(
     "Upload test dataset",
     type=["csv"],
-    help="Upload CSV containing 30 input features and is_phishing."
+    help="Upload CSV file"
 )
-
-st.sidebar.caption(
-    "Required target column: is_phishing"
-)
-
-with st.sidebar.expander("Target Encoding"):
-    st.markdown(
-        """
-        **0** — Legitimate Website
-
-        **1** — Phishing Website
-        """
-    )
 
 st.sidebar.divider()
 
