@@ -1,5 +1,7 @@
 
 import os
+from pathlib import Path
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -23,50 +25,197 @@ from sklearn.metrics import (
 # ==========================================================
 
 st.set_page_config(
-    page_title="Phishing Detection Dashboard",
+    page_title="PhishGuard | Security Analytics",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+BASE_DIR = Path(__file__).resolve().parent
+
 
 # ==========================================================
-# 2. CUSTOM STYLING
+# 2. CUSTOM UI / UX DESIGN
 # ==========================================================
 
 st.markdown("""
 <style>
 
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+/* Main application */
+.stApp {
+    background: linear-gradient(
+        135deg,
+        #08111F 0%,
+        #101B2D 55%,
+        #0B1524 100%
+    );
 }
 
+/* Main content spacing */
+.block-container {
+    max-width: 1500px;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #0D1829;
+    border-right: 1px solid #24334B;
+}
+
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 {
+    color: #E8F0FC;
+}
+
+/* Main headings */
+h1, h2, h3 {
+    color: #F3F7FF !important;
+    font-weight: 700 !important;
+}
+
+p, label {
+    color: #C4D0E0;
+}
+
+/* Header */
+.hero {
+    background: linear-gradient(
+        115deg,
+        #122D4B,
+        #123D59,
+        #102D42
+    );
+    padding: 30px;
+    border-radius: 18px;
+    border: 1px solid #28506C;
+    margin-bottom: 25px;
+}
+
+.hero-title {
+    color: #FFFFFF;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.hero-subtitle {
+    color: #B9D2E9;
+    font-size: 15px;
+    margin-top: 8px;
+}
+
+.hero-tag {
+    display: inline-block;
+    background: #164D51;
+    color: #7CE8D0;
+    border: 1px solid #267C77;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    margin-top: 15px;
+}
+
+/* Metric cards */
 div[data-testid="stMetric"] {
-    background-color: rgba(128, 128, 128, 0.07);
-    border: 1px solid rgba(128, 128, 128, 0.20);
-    padding: 16px;
-    border-radius: 12px;
+    background: linear-gradient(
+        145deg,
+        #17283E,
+        #132238
+    );
+    border: 1px solid #2A405D;
+    border-radius: 14px;
+    padding: 19px;
+    min-height: 115px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+div[data-testid="stMetricLabel"] {
+    color: #AFC2D8;
+    font-size: 13px;
 }
 
 div[data-testid="stMetricValue"] {
-    font-size: 1.65rem;
-    font-weight: 700;
+    color: #FFFFFF;
+    font-size: 26px;
+    font-weight: 750;
 }
 
-[data-testid="stSidebar"] {
-    border-right: 1px solid rgba(128, 128, 128, 0.2);
+/* Tabs */
+button[data-baseweb="tab"] {
+    font-size: 14px;
+    font-weight: 600;
+    color: #AFC2D8;
 }
 
-.section-heading {
-    font-size: 1.2rem;
+/* Dataframes */
+div[data-testid="stDataFrame"] {
+    border: 1px solid #2A405D;
+    border-radius: 12px;
+}
+
+/* Buttons */
+.stButton > button {
+    border-radius: 10px;
+    border: 1px solid #2788BA;
+    background: #14577C;
+    color: white;
     font-weight: 650;
-    margin-bottom: 12px;
 }
 
-.small-caption {
-    color: #8b949e;
-    font-size: 0.85rem;
+.stButton > button:hover {
+    background: #1976A5;
+    border-color: #54BCEB;
+    color: white;
+}
+
+/* Download button */
+.stDownloadButton > button {
+    border-radius: 10px;
+    background: #087D70;
+    color: white;
+    border: 1px solid #23B7A4;
+    font-weight: 650;
+}
+
+/* Section cards */
+.panel {
+    background: #142238;
+    border: 1px solid #293E59;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 15px;
+}
+
+.panel-title {
+    color: #EAF3FF;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+/* Small captions */
+.muted {
+    color: #91A8C3;
+    font-size: 13px;
+}
+
+/* Status */
+.success-text {
+    color: #61DDB8;
+    font-weight: 650;
+}
+
+.warning-text {
+    color: #F5C16C;
+    font-weight: 650;
+}
+
+/* Dividers */
+hr {
+    border-color: #2B405B;
 }
 
 </style>
@@ -77,19 +226,25 @@ div[data-testid="stMetricValue"] {
 # 3. APPLICATION HEADER
 # ==========================================================
 
-st.title("🛡️ Phishing Website Detection")
+st.markdown("""
+<div class="hero">
 
-st.markdown(
-    "Machine Learning Dashboard for Website Security "
-    "and Phishing Classification"
-)
+    <div class="hero-title">
+        🛡️ PhishGuard
+    </div>
 
-st.caption(
-    "Evaluate and compare trained machine learning "
-    "models using an uploaded test dataset."
-)
+    <div class="hero-subtitle">
+        Intelligent Phishing Website Detection
+        &nbsp; | &nbsp;
+        Machine Learning Security Analytics
+    </div>
 
-st.divider()
+    <div class="hero-tag">
+        ● SECURITY ANALYTICS DASHBOARD
+    </div>
+
+</div>
+""", unsafe_allow_html=True)
 
 
 # ==========================================================
@@ -115,7 +270,7 @@ MODEL_DESCRIPTIONS = {
         "Distance-based classification using nearest observations.",
 
     "Gaussian Naive Bayes":
-        "Probabilistic classification using Gaussian assumptions.",
+        "Probabilistic classification based on Gaussian assumptions.",
 
     "Support Vector Machine":
         "Linear classification using an optimal decision boundary."
@@ -129,16 +284,18 @@ MODEL_DESCRIPTIONS = {
 @st.cache_resource(show_spinner=False)
 def load_model(model_path):
 
-    if not os.path.exists(model_path):
+    path = BASE_DIR / model_path
+
+    if not path.exists():
         raise FileNotFoundError(
             f"Model file not found: {model_path}"
         )
 
-    return joblib.load(model_path)
+    return joblib.load(path)
 
 
 # ==========================================================
-# 6. EVALUATION FUNCTION
+# 6. MODEL EVALUATION FUNCTION
 # ==========================================================
 
 def evaluate_model(model, test_data):
@@ -147,6 +304,7 @@ def evaluate_model(model, test_data):
 
     # Separate input features and target
     X_test = test_data.drop(columns=[target_column])
+
     y_test = pd.to_numeric(
         test_data[target_column],
         errors="coerce"
@@ -154,21 +312,22 @@ def evaluate_model(model, test_data):
 
     # Validate target
     if y_test.isna().any():
-        raise ValueError("Target column contains invalid values.")
+        raise ValueError("Invalid target values detected.")
 
     if not set(y_test.unique()).issubset({0, 1}):
         raise ValueError(
-            "Target values must be 0 or 1."
+            "Target labels must be 0 or 1."
         )
 
     if y_test.nunique() != 2:
         raise ValueError(
-            "Test dataset must contain both classes."
+            "Both legitimate and phishing classes are required."
         )
 
-    # Obtain feature names from the fitted pipeline
+    # Retrieve expected feature names
     expected_features = list(model.feature_names_in_)
 
+    # Check missing features
     missing_features = [
         col for col in expected_features
         if col not in X_test.columns
@@ -179,41 +338,42 @@ def evaluate_model(model, test_data):
             f"Missing required features: {missing_features}"
         )
 
+    # Identify extra columns
     extra_features = [
         col for col in X_test.columns
         if col not in expected_features
     ]
 
-    # Reorder features according to training
+    # Preserve training feature order
     X_test = X_test[expected_features].copy()
 
-    # Validate numerical inputs
+    # Validate numeric features
     numeric_data = X_test.apply(
         pd.to_numeric,
         errors="coerce"
     )
 
-    invalid_values = (
-        numeric_data.isna() & X_test.notna()
-    )
+    invalid_values = numeric_data.isna() & X_test.notna()
 
     if invalid_values.any().any():
         raise ValueError(
-            "Uploaded features contain non-numeric values."
+            "Non-numeric feature values detected."
         )
 
     X_test = numeric_data.replace(
-        [np.inf, -np.inf], np.nan
+        [np.inf, -np.inf],
+        np.nan
     )
 
-    # Predict using saved model
+    # Generate predictions
     y_pred = model.predict(X_test)
 
-    # Obtain scores for AUC
+    # Calculate continuous scores for AUC
     if hasattr(model, "predict_proba"):
 
-        classes = list(model.classes_)
-        positive_index = classes.index(1)
+        model_classes = list(model.classes_)
+
+        positive_index = model_classes.index(1)
 
         y_score = model.predict_proba(X_test)[
             :, positive_index
@@ -223,60 +383,77 @@ def evaluate_model(model, test_data):
 
         y_score = model.decision_function(X_test)
 
+        if list(model.classes_)[1] != 1:
+            y_score = -y_score
+
     else:
         raise ValueError(
-            "Model does not support AUC score calculation."
+            "Model does not support AUC calculation."
         )
 
-    # Calculate all six metrics
+    # Calculate evaluation metrics
     metrics = {
-        "Accuracy": accuracy_score(y_test, y_pred),
 
-        "AUC": roc_auc_score(y_test, y_score),
+        "Accuracy": accuracy_score(
+            y_test,
+            y_pred
+        ),
+
+        "AUC": roc_auc_score(
+            y_test,
+            y_score
+        ),
 
         "Precision": precision_score(
-            y_test, y_pred,
+            y_test,
+            y_pred,
             pos_label=1,
             zero_division=0
         ),
 
         "Recall": recall_score(
-            y_test, y_pred,
+            y_test,
+            y_pred,
             pos_label=1,
             zero_division=0
         ),
 
         "F1 Score": f1_score(
-            y_test, y_pred,
+            y_test,
+            y_pred,
             pos_label=1,
             zero_division=0
         ),
 
         "MCC": matthews_corrcoef(
-            y_test, y_pred
+            y_test,
+            y_pred
         )
     }
 
-    # Generate classification report
+    # Classification report
     report = classification_report(
         y_test,
         y_pred,
         labels=[0, 1],
-        target_names=["Legitimate", "Phishing"],
+        target_names=[
+            "Legitimate",
+            "Phishing"
+        ],
         output_dict=True,
         zero_division=0
     )
 
     report_df = pd.DataFrame(report).T
 
-    # Generate confusion matrix
+    # Confusion matrix
     cm = confusion_matrix(
         y_test,
         y_pred,
         labels=[0, 1]
     )
 
-    # Prepare prediction dataset
+    # Prepare prediction results
     predictions = test_data.copy()
 
     predictions["predicted_class"] = y_pred
@@ -303,23 +480,35 @@ def evaluate_model(model, test_data):
 
 
 # ==========================================================
-# 7. SIDEBAR
+# 7. SIDEBAR CONTROLS
 # ==========================================================
 
-st.sidebar.title("⚙️ Dashboard Controls")
+st.sidebar.markdown("## ⚙️ Control Center")
 
-st.sidebar.markdown("### Model Configuration")
-
-view_mode = st.sidebar.radio(
-    "Evaluation Mode",
-    [
-        "Single Model Evaluation",
-        "Compare All Models"
-    ]
+st.sidebar.markdown(
+    '<p class="muted">Configure your evaluation session</p>',
+    unsafe_allow_html=True
 )
 
+st.sidebar.divider()
+
+# Evaluation mode
+st.sidebar.markdown("### Evaluation Mode")
+
+view_mode = st.sidebar.radio(
+    "Choose evaluation mode",
+    [
+        "Single Model",
+        "Compare All Models"
+    ],
+    help="Compare all five saved classifiers or evaluate one model."
+)
+
+# Model selection
+st.sidebar.markdown("### Model Selection")
+
 selected_model = st.sidebar.selectbox(
-    "Select Classification Model",
+    "Choose classifier",
     list(MODEL_FILES.keys())
 )
 
@@ -329,71 +518,120 @@ st.sidebar.caption(
 
 st.sidebar.divider()
 
-st.sidebar.markdown("### Dataset Upload")
+# Dataset upload
+st.sidebar.markdown("### 📁 Dataset Upload")
 
 uploaded_file = st.sidebar.file_uploader(
-    "Upload Test Dataset",
+    "Upload test dataset",
     type=["csv"],
-    help="Upload a CSV containing all 30 input features "
-         "and the is_phishing target column."
+    help="Upload CSV containing 30 input features and is_phishing."
 )
 
-st.sidebar.info(
-    "Target encoding:\n\n"
-    "0 = Legitimate\n\n"
-    "1 = Phishing"
+st.sidebar.caption(
+    "Required target column: is_phishing"
 )
+
+with st.sidebar.expander("Target Encoding"):
+    st.markdown(
+        """
+        **0** — Legitimate Website
+
+        **1** — Phishing Website
+        """
+    )
 
 st.sidebar.divider()
 
-st.sidebar.markdown("### About")
+st.sidebar.markdown("### About PhishGuard")
 
 st.sidebar.caption(
-    "Developed using Python, Scikit-learn, "
-    "Pandas and Streamlit."
+    "A machine learning application developed "
+    "for phishing website classification."
 )
 
 st.sidebar.caption(
-    "Models are loaded from saved Joblib pipelines. "
-    "No model retraining is performed."
+    "BITS Pilani | M.Tech AIML"
 )
 
 
 # ==========================================================
-# 8. MAIN APPLICATION
+# 8. WELCOME SCREEN
 # ==========================================================
 
 if uploaded_file is None:
 
-    st.info(
-        "Please upload your test CSV using the sidebar "
-        "to begin model evaluation."
+    st.markdown("## Welcome to PhishGuard")
+
+    st.markdown(
+        "Analyze phishing detection models using "
+        "your prepared test dataset."
     )
 
-    st.markdown("### Application Features")
+    st.info(
+        "Upload your test CSV from the sidebar "
+        "to start the evaluation."
+    )
+
+    st.markdown("### Dashboard Capabilities")
 
     col1, col2, col3 = st.columns(3)
 
-    col1.markdown(
-        "**📁 Dataset Upload**\n\n"
-        "Upload the held-out test dataset."
-    )
+    with col1:
+        st.markdown("""
+        <div class="panel">
+            <div class="panel-title">📁 Dataset Analysis</div>
+            <div class="muted">
+                Upload your test dataset and inspect
+                its features and class distribution.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    col2.markdown(
-        "**🤖 Model Selection**\n\n"
-        "Evaluate five trained classifiers."
-    )
+    with col2:
+        st.markdown("""
+        <div class="panel">
+            <div class="panel-title">🤖 Model Evaluation</div>
+            <div class="muted">
+                Evaluate five trained machine learning
+                classification models.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    col3.markdown(
-        "**📊 Performance Analysis**\n\n"
-        "View metrics and classification results."
+    with col3:
+        st.markdown("""
+        <div class="panel">
+            <div class="panel-title">📊 Performance Analytics</div>
+            <div class="muted">
+                Explore performance metrics, confusion
+                matrices and classification reports.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("### Supported Classification Models")
+
+    model_col1, model_col2 = st.columns(2)
+
+    with model_col1:
+        for name in list(MODEL_FILES.keys())[:3]:
+            st.markdown(f"🔹 {name}")
+
+    with model_col2:
+        for name in list(MODEL_FILES.keys())[3:]:
+            st.markdown(f"🔹 {name}")
+
+    st.divider()
+
+    st.caption(
+        "PhishGuard | Machine Learning Security Analytics"
     )
 
     st.stop()
 
 
 # ==========================================================
-# 9. READ AND VALIDATE DATASET
+# 9. READ AND VALIDATE UPLOADED DATASET
 # ==========================================================
 
 try:
@@ -402,74 +640,97 @@ try:
 
 except Exception as error:
 
-    st.error(f"Unable to read CSV file: {error}")
+    st.error(f"Unable to read uploaded CSV: {error}")
     st.stop()
 
 
 if test_data.empty:
 
-    st.error("Uploaded dataset is empty.")
+    st.error("The uploaded dataset is empty.")
     st.stop()
 
 
 if "is_phishing" not in test_data.columns:
 
     st.error(
-        "Required target column 'is_phishing' is missing."
+        "The required target column 'is_phishing' is missing."
     )
     st.stop()
 
 
-# Dataset information
+# Validate target
+target_values = pd.to_numeric(
+    test_data["is_phishing"],
+    errors="coerce"
+)
+
+if target_values.isna().any():
+
+    st.error("Invalid values found in the target column.")
+    st.stop()
+
+if not set(target_values.unique()).issubset({0, 1}):
+
+    st.error("Target labels must be either 0 or 1.")
+    st.stop()
+
+if target_values.nunique() != 2:
+
+    st.error(
+        "The test dataset must contain both classes "
+        "to calculate AUC."
+    )
+    st.stop()
+
+test_data["is_phishing"] = target_values.astype(int)
+
+
+# ==========================================================
+# 10. DATASET OVERVIEW
+# ==========================================================
+
+st.markdown("## 📁 Dataset Overview")
+
 total_records = len(test_data)
 
 total_features = len(test_data.columns) - 1
 
-phishing_count = (
-    pd.to_numeric(
-        test_data["is_phishing"],
-        errors="coerce"
-    ) == 1
-).sum()
+phishing_count = int(
+    (test_data["is_phishing"] == 1).sum()
+)
 
-legitimate_count = total_records - phishing_count
+legitimate_count = int(
+    (test_data["is_phishing"] == 0).sum()
+)
 
+c1, c2, c3, c4 = st.columns(4)
 
-# ==========================================================
-# 10. DATASET SUMMARY
-# ==========================================================
-
-st.subheader("📁 Uploaded Dataset Overview")
-
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric(
+c1.metric(
     "Total Records",
     f"{total_records:,}"
 )
 
-col2.metric(
+c2.metric(
     "Input Features",
     total_features
 )
 
-col3.metric(
+c3.metric(
     "Phishing Records",
     f"{phishing_count:,}"
 )
 
-col4.metric(
+c4.metric(
     "Legitimate Records",
     f"{legitimate_count:,}"
 )
 
 st.caption(
-    f"Uploaded file: {uploaded_file.name} | "
+    f"File: {uploaded_file.name}  |  "
     f"Size: {uploaded_file.size / 1024:.2f} KB"
 )
 
-
-with st.expander("Preview Uploaded Dataset"):
+with st.expander("🔍 Preview Dataset"):
 
     st.dataframe(
         test_data.head(10),
@@ -481,14 +742,11 @@ with st.expander("Preview Uploaded Dataset"):
     )
 
 
-st.divider()
-
-
 # ==========================================================
-# 11. RUN MODEL EVALUATION
+# 11. MODEL EVALUATION
 # ==========================================================
 
-if view_mode == "Single Model Evaluation":
+if view_mode == "Single Model":
 
     models_to_evaluate = [selected_model]
 
@@ -500,7 +758,9 @@ else:
 all_results = {}
 failed_models = {}
 
-with st.spinner("Evaluating selected classification models..."):
+with st.spinner(
+    "Analyzing dataset and evaluating saved models..."
+):
 
     for model_name in models_to_evaluate:
 
@@ -522,22 +782,27 @@ with st.spinner("Evaluating selected classification models..."):
 
 if failed_models:
 
-    for model_name, error in failed_models.items():
+    st.error("Some models could not be evaluated.")
 
-        st.error(f"{model_name}: {error}")
+    for name, error in failed_models.items():
+        st.write(f"**{name}:** {error}")
 
-    st.stop()
+    if not all_results:
+        st.stop()
 
 
-if selected_model not in all_results:
+# Determine detailed model
+detail_model = (
+    selected_model
+    if selected_model in all_results
+    else next(iter(all_results))
+)
 
-    selected_model = models_to_evaluate[0]
-
-selected_result = all_results[selected_model]
+selected_result = all_results[detail_model]
 
 
 # ==========================================================
-# 12. CREATE DASHBOARD TABS
+# 12. DASHBOARD NAVIGATION
 # ==========================================================
 
 tab_overview, tab_compare, tab_confusion, tab_report, tab_predictions = st.tabs(
@@ -552,109 +817,116 @@ tab_overview, tab_compare, tab_confusion, tab_report, tab_predictions = st.tabs(
 
 
 # ==========================================================
-# 13. OVERVIEW TAB
+# 13. OVERVIEW
 # ==========================================================
 
 with tab_overview:
 
-    st.subheader("Model Performance Overview")
+    st.markdown("### Model Performance Overview")
 
     st.markdown(
-        f"Selected Model: **{selected_model}**"
+        f"Detailed evaluation for **{detail_model}**"
     )
 
     metrics = selected_result["metrics"]
 
-    # First row of metrics
-    col1, col2, col3 = st.columns(3)
+    # Row 1
+    m1, m2, m3 = st.columns(3)
 
-    col1.metric(
+    m1.metric(
         "Accuracy",
         f"{metrics['Accuracy']:.2%}"
     )
 
-    col2.metric(
+    m2.metric(
         "ROC AUC",
         f"{metrics['AUC']:.2%}"
     )
 
-    col3.metric(
+    m3.metric(
         "Precision",
         f"{metrics['Precision']:.2%}"
     )
 
-    # Second row of metrics
-    col4, col5, col6 = st.columns(3)
+    # Row 2
+    m4, m5, m6 = st.columns(3)
 
-    col4.metric(
+    m4.metric(
         "Recall",
         f"{metrics['Recall']:.2%}"
     )
 
-    col5.metric(
+    m5.metric(
         "F1 Score",
         f"{metrics['F1 Score']:.2%}"
     )
 
-    col6.metric(
+    m6.metric(
         "MCC",
         f"{metrics['MCC']:.4f}"
     )
 
     st.divider()
 
-    st.subheader("Classification Summary")
+    st.markdown("### Prediction Summary")
 
-    correct = (
-        selected_result["predictions"]
-        ["prediction_result"]
-        .eq("Correct")
-        .sum()
+    predictions = selected_result["predictions"]
+
+    correct = int(
+        (predictions["prediction_result"] == "Correct").sum()
     )
 
     incorrect = total_records - correct
 
-    col1, col2 = st.columns(2)
+    p1, p2, p3 = st.columns(3)
 
-    col1.metric(
+    p1.metric(
         "Correct Predictions",
         f"{correct:,}"
     )
 
-    col2.metric(
+    p2.metric(
         "Incorrect Predictions",
         f"{incorrect:,}"
     )
 
-    accuracy_summary = pd.DataFrame({
-        "Prediction Result": [
-            "Correct",
-            "Incorrect"
+    p3.metric(
+        "Prediction Accuracy",
+        f"{correct / total_records:.2%}"
+    )
+
+    st.markdown("### Dataset Class Distribution")
+
+    class_data = pd.DataFrame({
+        "Website Type": [
+            "Legitimate",
+            "Phishing"
         ],
-        "Count": [
-            correct,
-            incorrect
+        "Records": [
+            legitimate_count,
+            phishing_count
         ]
     })
 
     st.bar_chart(
-        accuracy_summary.set_index("Prediction Result")
+        class_data.set_index("Website Type"),
+        color="#20BFA8"
     )
 
 
 # ==========================================================
-# 14. MODEL COMPARISON TAB
+# 14. MODEL COMPARISON
 # ==========================================================
 
 with tab_compare:
 
-    st.subheader("Comparison of Classification Models")
+    st.markdown("### Comparative Model Performance")
 
-    if len(all_results) == 1:
+    if len(all_results) < 2:
 
         st.info(
             "Select 'Compare All Models' from the sidebar "
-            "to display the performance of all five classifiers."
+            "to view all five classifiers together."
         )
 
     else:
@@ -665,69 +937,81 @@ with tab_compare:
         }).T
 
         st.dataframe(
-            comparison_df.style.format("{:.4f}").highlight_max(
+            comparison_df.style.format(
+                "{:.4f}"
+            ).highlight_max(
                 axis=0,
-                color="#184D35"
+                color="#145C50"
             ),
             use_container_width=True
         )
 
-        st.markdown("### Performance Comparison Chart")
+        st.markdown("### Performance Visualization")
 
-        chart_metrics = st.multiselect(
-            "Select metrics to compare",
-            options=list(comparison_df.columns),
+        selected_metrics = st.multiselect(
+            "Choose metrics",
+            list(comparison_df.columns),
             default=[
                 "Accuracy",
+                "AUC",
                 "Precision",
                 "Recall",
                 "F1 Score"
             ]
         )
 
-        if chart_metrics:
+        if selected_metrics:
 
             st.bar_chart(
-                comparison_df[chart_metrics],
-                use_container_width=True
+                comparison_df[selected_metrics],
+                color="#20BFA8"
             )
 
-        # Rank by F1
-        ranking_df = comparison_df.sort_values(
+        st.markdown("### Model Ranking")
+
+        ranking = comparison_df.sort_values(
             by="F1 Score",
             ascending=False
         )
 
-        st.markdown("### Model Ranking by F1 Score")
+        ranking_display = ranking[
+            ["Accuracy", "AUC", "F1 Score", "MCC"]
+        ]
 
         st.dataframe(
-            ranking_df[["F1 Score", "Accuracy", "AUC", "MCC"]]
-            .style.format("{:.4f}"),
+            ranking_display.style.format("{:.4f}"),
             use_container_width=True
         )
 
-        winner = ranking_df.index[0]
+        best_name = ranking.index[0]
 
         st.success(
-            f"Highest testing F1 Score: {winner}"
+            f"🏆 Highest Testing F1 Score: {best_name}"
         )
 
 
 # ==========================================================
-# 15. CONFUSION MATRIX TAB
+# 15. CONFUSION MATRIX
 # ==========================================================
 
 with tab_confusion:
 
-    st.subheader("Confusion Matrix")
+    st.markdown("### Confusion Matrix")
+
+    st.caption(
+        f"Selected model: {detail_model}"
+    )
 
     cm = selected_result["confusion_matrix"]
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
+    fig.patch.set_facecolor("#142238")
+    ax.set_facecolor("#142238")
+
     image = ax.imshow(
         cm,
-        cmap="Blues"
+        cmap="GnBu"
     )
 
     ax.set_xticks(
@@ -740,14 +1024,24 @@ with tab_confusion:
         labels=["Legitimate", "Phishing"]
     )
 
-    ax.set_xlabel("Predicted Class")
-    ax.set_ylabel("Actual Class")
-
-    ax.set_title(
-        f"Confusion Matrix - {selected_model}"
+    ax.set_xlabel(
+        "Predicted Class",
+        color="white"
     )
 
-    # Display cell values
+    ax.set_ylabel(
+        "Actual Class",
+        color="white"
+    )
+
+    ax.tick_params(colors="white")
+
+    ax.set_title(
+        "Classification Outcomes",
+        color="white",
+        pad=15
+    )
+
     threshold = cm.max() / 2
 
     for i in range(2):
@@ -757,82 +1051,137 @@ with tab_confusion:
             ax.text(
                 j,
                 i,
-                str(cm[i, j]),
+                f"{cm[i, j]:,}",
                 ha="center",
                 va="center",
+                fontsize=16,
+                fontweight="bold",
                 color=(
                     "white"
                     if cm[i, j] > threshold
-                    else "black"
-                ),
-                fontsize=14,
-                fontweight="bold"
+                    else "#102438"
+                )
             )
 
-    fig.colorbar(image, ax=ax)
+    colorbar = fig.colorbar(
+        image,
+        ax=ax
+    )
 
-    st.pyplot(fig)
+    colorbar.ax.yaxis.set_tick_params(
+        color="white"
+    )
+
+    plt.tight_layout()
+
+    st.pyplot(
+        fig,
+        use_container_width=False
+    )
+
     plt.close(fig)
 
-    # Display individual confusion matrix values
     tn, fp, fn, tp = cm.ravel()
 
-    col1, col2 = st.columns(2)
+    st.markdown("### Classification Outcomes")
 
-    col1.metric("True Negatives", f"{tn:,}")
-    col2.metric("False Positives", f"{fp:,}")
+    a, b = st.columns(2)
 
-    col3, col4 = st.columns(2)
+    a.metric("True Negatives", f"{tn:,}")
+    b.metric("False Positives", f"{fp:,}")
 
-    col3.metric("False Negatives", f"{fn:,}")
-    col4.metric("True Positives", f"{tp:,}")
+    c, d = st.columns(2)
+
+    c.metric("False Negatives", f"{fn:,}")
+    d.metric("True Positives", f"{tp:,}")
 
 
 # ==========================================================
-# 16. CLASSIFICATION REPORT TAB
+# 16. CLASSIFICATION REPORT
 # ==========================================================
 
 with tab_report:
 
-    st.subheader("Classification Report")
+    st.markdown("### Detailed Classification Report")
 
     report_df = selected_result["report"].copy()
 
     st.dataframe(
-        report_df.style.format(
-            {
-                "precision": "{:.4f}",
-                "recall": "{:.4f}",
-                "f1-score": "{:.4f}",
-                "support": "{:.0f}"
-            }
-        ),
+        report_df.style.format({
+            "precision": "{:.4f}",
+            "recall": "{:.4f}",
+            "f1-score": "{:.4f}",
+            "support": "{:.0f}"
+        }),
         use_container_width=True
     )
 
     st.caption(
-        "The report presents Precision, Recall, F1 Score "
-        "and Support for legitimate and phishing classes."
+        "The report includes precision, recall, F1 Score "
+        "and support for both website classes."
     )
 
 
 # ==========================================================
-# 17. PREDICTIONS TAB
+# 17. PREDICTION RESULTS
 # ==========================================================
 
 with tab_predictions:
 
-    st.subheader("Prediction Results")
+    st.markdown("### Website Classification Results")
 
     prediction_df = selected_result["predictions"]
 
-    st.dataframe(
-        prediction_df,
-        use_container_width=True,
-        height=400
+    filter_option = st.selectbox(
+        "Filter predictions",
+        [
+            "All Records",
+            "Correct Predictions",
+            "Incorrect Predictions",
+            "Predicted Phishing",
+            "Predicted Legitimate"
+        ]
     )
 
-    st.markdown("### Download Results")
+    if filter_option == "Correct Predictions":
+
+        display_df = prediction_df[
+            prediction_df["prediction_result"] == "Correct"
+        ]
+
+    elif filter_option == "Incorrect Predictions":
+
+        display_df = prediction_df[
+            prediction_df["prediction_result"] == "Incorrect"
+        ]
+
+    elif filter_option == "Predicted Phishing":
+
+        display_df = prediction_df[
+            prediction_df["predicted_class"] == 1
+        ]
+
+    elif filter_option == "Predicted Legitimate":
+
+        display_df = prediction_df[
+            prediction_df["predicted_class"] == 0
+        ]
+
+    else:
+
+        display_df = prediction_df
+
+    st.caption(
+        f"Displaying {len(display_df):,} of {total_records:,} records."
+    )
+
+    st.dataframe(
+        display_df,
+        use_container_width=True,
+        height=450
+    )
+
+    st.markdown("### Export Results")
 
     csv_data = prediction_df.to_csv(
         index=False
@@ -853,13 +1202,26 @@ with tab_predictions:
 
 st.divider()
 
-st.caption(
-    "Phishing Website Detection | "
-    "Machine Learning Project | "
-    "BITS Pilani M.Tech AIML"
-)
+footer_left, footer_right = st.columns(2)
+
+with footer_left:
+
+    st.markdown(
+        "**🛡️ PhishGuard**  \n"
+        "Intelligent Phishing Website Detection"
+    )
+
+with footer_right:
+
+    st.markdown(
+        "<div style='text-align:right;color:#91A8C3;'>"
+        "BITS Pilani | M.Tech AIML<br>"
+        "Machine Learning Classification Project"
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 st.caption(
-    "All evaluations use saved models. "
-    "No retraining is performed on uploaded test data."
+    "Evaluation is performed using saved models. "
+    "No model retraining is performed on uploaded test data."
 )
