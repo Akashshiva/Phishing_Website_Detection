@@ -88,59 +88,15 @@ The application allows users to:
 - View the predicted classification.
 - View the model-estimated phishing probability.
 
-**Live Application:** [Open Streamlit App](YOUR_STREAMLIT_APP_URL)
+**Live Application:** [Open Streamlit App](https://phishingwebsitedetection-ml.streamlit.app/)
 
-## 8. Project Structure
-
-```text
-Phishing-Website-Detection/
-│
-├── artifacts/
-│   ├── phishing_knn_model.joblib
-│   └── final_model_comparison.csv
-│
-├── notebooks/
-│   └── phishing_website_detection.ipynb
-│
-├── app.py
-├── requirements.txt
-├── .gitignore
-└── README.md
-```
-
-## 9. Running the Application Locally
-
-Clone the repository:
-
-```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
-```
-
-Move into the project directory:
-
-```bash
-cd Phishing-Website-Detection
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run the Streamlit application:
-
-```bash
-streamlit run app.py
-```
-
-## 10. Limitations and Future Improvements
+## 8. Limitations and Future Improvements
 
 - The application currently accepts pre-extracted, encoded feature values rather than automatically analyzing a raw URL.
 - The model's performance depends on the dataset and feature representation used during training.
 - Future work could include automatic URL feature extraction, testing on newer phishing datasets, additional algorithms, and further model optimization.
 
-## 11. Conclusion
+## 9. Conclusion
 
 This project demonstrates the application of machine learning techniques to phishing website detection. Five classification algorithms were trained, tuned, and evaluated using multiple performance metrics.
 
