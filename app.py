@@ -986,8 +986,8 @@ with tab_compare:
               sort=False,
               height=550,
               width="stretch",
-              x_label="Model Performance Score",
-              y_label="Machine Learning Models"
+              x_label="Machine Learning Models",
+              y_label=" "
           )
 
         st.markdown("### Model Ranking")
