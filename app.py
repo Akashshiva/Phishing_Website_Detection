@@ -52,9 +52,10 @@ st.markdown("""
 }
 
 /* Main content spacing */
-.block-container {
+.stMainBlockContainer,
+div[data-testid="stMainBlockContainer"] {
     max-width: 1500px;
-    padding-top: 2rem;
+    padding-top: 4.5rem !important;
     padding-bottom: 3rem;
 }
 
