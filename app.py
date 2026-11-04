@@ -915,7 +915,7 @@ with tab_overview:
 
     st.bar_chart(
         class_data.set_index("Website Type"),
-        color="#20BFA8"
+        color="#3B82F6"
     )
 
 
