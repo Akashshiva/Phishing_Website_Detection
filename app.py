@@ -985,7 +985,7 @@ with tab_compare:
               stack=False,
               sort=False,
               height=550,
-              width="stretch"
+              width="stretch",
               x_label="Model Performance Score",
               y_label="Machine Learning Models"
           )
