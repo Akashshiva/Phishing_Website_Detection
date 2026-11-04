@@ -226,25 +226,49 @@ hr {
 # 3. APPLICATION HEADER
 # ==========================================================
 
-st.markdown("""
-<div class="hero">
+st.html("""
+<div style="
+    background: linear-gradient(115deg, #122D4B, #123D59, #102D42);
+    padding: 32px;
+    border-radius: 18px;
+    border: 1px solid #28506C;
+    margin-bottom: 25px;
+">
 
-    <div class="hero-title">
+    <div style="
+        color: #FFFFFF;
+        font-size: 38px;
+        font-weight: 800;
+        letter-spacing: -1px;
+    ">
         🛡️ PhishGuard
     </div>
 
-    <div class="hero-subtitle">
+    <div style="
+        color: #B9D2E9;
+        font-size: 16px;
+        margin-top: 10px;
+    ">
         Intelligent Phishing Website Detection
         &nbsp; | &nbsp;
         Machine Learning Security Analytics
     </div>
 
-    <div class="hero-tag">
+    <div style="
+        display: inline-block;
+        background: #164D51;
+        color: #7CE8D0;
+        border: 1px solid #267C77;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 12px;
+        margin-top: 18px;
+    ">
         ● SECURITY ANALYTICS DASHBOARD
     </div>
 
 </div>
-""", unsafe_allow_html=True)
+""")
 
 
 # ==========================================================
@@ -484,13 +508,6 @@ def evaluate_model(model, test_data):
 # ==========================================================
 
 st.sidebar.markdown("## ⚙️ Control Center")
-
-st.sidebar.markdown(
-    '<p class="muted">Configure your evaluation session</p>',
-    unsafe_allow_html=True
-)
-
-st.sidebar.divider()
 
 # Evaluation mode
 st.sidebar.markdown("### Evaluation Mode")
