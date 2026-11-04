@@ -966,11 +966,23 @@ with tab_compare:
         )
 
         if selected_metrics:
+          # Define chart colors for different metrics
+          chart_colors = [
+              "#20BFA8",
+              "#3B82F6",
+              "#A78BFA",
+              "#F59E0B",
+              "#F472B6",
+              "#22D3EE"
+          ]
 
-            st.bar_chart(
-                comparison_df[selected_metrics],
-                color="#20BFA8"
-            )
+          # Display interactive comparison chart
+          st.bar_chart(
+              comparison_df,
+              y=selected_metrics,
+              color=chart_colors[:len(selected_metrics)],
+              width="stretch"
+          )
 
         st.markdown("### Model Ranking")
 
