@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-Phishing is a cyberattack in which attackers create deceptive websites to steal sensitive information such as login credentials, banking details, and personal data
+Phishing is a cyberattack in which attackers create deceptive websites to steal sensitive information such as login credentials, banking details, and personal data.
 
 This project uses machine learning classification algorithms to identify phishing and legitimate websites based on their extracted website features.
 
