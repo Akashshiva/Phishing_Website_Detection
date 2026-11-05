@@ -1,105 +1,116 @@
 # Phishing Website Detection Using Machine Learning
 
-## 1. Project Overview
+## 1. Problem Statement
 
-Phishing is a cyberattack in which attackers create deceptive websites to steal sensitive information such as login credentials, banking details, and personal data.
+Phishing websites imitate legitimate websites to trick users into disclosing sensitive information. The objective of this project is to build and compare supervised machine-learning classifiers that identify phishing and legitimate websites from encoded website features.
 
-This project uses machine learning classification algorithms to identify phishing and legitimate websites based on their extracted website features.
-
-**Objective:** Build and evaluate machine learning models to classify websites as phishing or legitimate and deploy the best-performing model through a Streamlit web application.
+The project implements five classification algorithms, evaluates them using six metrics, and demonstrates the saved models through a Streamlit application.
 
 ## 2. Dataset Description
 
-- **Dataset:** UCI Phishing Websites
-- **Source:** [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/327/phishing+websites)
+- **Dataset:** Phishing Websites Dataset
+- **Source:** [UCI Machine Learning Repository – Dataset 327](https://archive.ics.uci.edu/dataset/327/phishing)
 - **Instances:** 11,055
-- **Features:** 30
-- **Target:** Website classification
+- **Input features:** 30
+- **Problem type:** Binary classification
+- **Missing values:** The UCI dataset documentation reports no missing values.
 
-**Target encoding:**
-- `1` — Phishing
-- `0` — Legitimate
+**Target encoding used in this project:**
+- `1` — Phishing website (positive class)
+- `0` — Legitimate website
 
-## 3. Project Methodology
+The original dataset labels were transformed from `-1` (phishing) and `+1` (legitimate) into the encoding above.
 
-The project follows these stages:
+Identical feature vectors were kept within the same partition using grouped, stratified splitting to reduce duplicate-feature leakage between training and testing. The experiment used 8,841 training records and 2,214 testing records (approximately 80:20).
 
-1. Dataset collection and preprocessing.
-2. Exploratory Data Analysis (EDA).
-3. Duplicate feature-vector analysis.
-4. Group-aware, stratified train-test splitting.
-5. Model training and hyperparameter tuning.
-6. Performance evaluation and comparison.
-7. Model selection and serialization.
-8. Streamlit application development and deployment.
+## 3. GitHub Repository
 
-Stratified group splitting was used to keep identical feature vectors within the same split and reduce the risk of duplicate-record leakage between training and testing.
+[Phishing_Website_Detection – GitHub Repository](https://github.com/Akashshiva/Phishing_Website_Detection)
 
-## 4. Machine Learning Algorithms
+The repository includes the notebook source, Streamlit application, requirements file, held-out test CSV, and five serialized model pipelines in the `model/` directory.
 
-Five classification algorithms were implemented:
+## 4. Machine Learning Models
+
+The five required classification algorithms are:
 
 1. Logistic Regression
-2. Decision Tree
+2. Decision Tree Classifier
 3. K-Nearest Neighbors (KNN)
 4. Gaussian Naive Bayes
 5. Support Vector Machine (SVM)
 
-Hyperparameter tuning was performed using RandomizedSearchCV with grouped cross-validation.
+Hyperparameters were tuned using RandomizedSearchCV with 3-fold Stratified Group Cross-Validation. The selected models were evaluated on the held-out test dataset. Phishing (class 1) is treated as the positive class.
 
 ## 5. Model Performance Comparison
 
-The models were evaluated on the held-out test dataset.
-
-| Model | Accuracy | ROC-AUC | Precision | Recall | F1-Score | MCC |
+| Model | Accuracy | AUC | Precision | Recall | F1 Score | MCC |
 |---|---:|---:|---:|---:|---:|---:|
 | Logistic Regression | 91.60% | 97.38% | 91.19% | 89.29% | 90.23% | 0.8288 |
 | Decision Tree | 93.99% | 96.10% | 94.33% | 91.68% | 92.99% | 0.8776 |
-| KNN | **94.08%** | **98.33%** | 93.97% | **92.31%** | **93.13%** | **0.8795** |
+| K-Nearest Neighbors | **94.08%** | **98.33%** | 93.97% | **92.31%** | **93.13%** | **0.8795** |
 | Gaussian Naive Bayes | 90.11% | 96.30% | 87.72% | 89.81% | 88.75% | 0.7994 |
-| SVM | 91.69% | 97.34% | 91.65% | 88.98% | 90.30% | 0.8306 |
+| Support Vector Machine | 91.69% | 97.34% | 91.65% | 88.98% | 90.30% | 0.8306 |
 
-## 6. Final Model Selection
+## 6. Model Performance Observations
 
-**Selected Model: K-Nearest Neighbors (KNN)**
+| Model | Observation |
+|---|---|
+| Logistic Regression | Achieved 91.60% accuracy and 90.23% F1 Score. It provides a reliable baseline and has a relatively small training-testing accuracy gap. |
+| Decision Tree | Achieved 93.99% accuracy and 92.99% F1 Score. It provides strong classification performance, with some evidence of overfitting. |
+| K-Nearest Neighbors | Achieved the highest testing accuracy (94.08%), AUC (98.33%), recall (92.31%), F1 Score (93.13%), and MCC (0.8795). It also had the largest training-testing accuracy gap among the five models. |
+| Gaussian Naive Bayes | Achieved 90.11% accuracy and 88.75% F1 Score. It was the weakest of the five evaluated classifiers on the reported test metrics. |
+| Support Vector Machine | Achieved 91.69% accuracy and 90.30% F1 Score. It showed a relatively small training-testing accuracy gap but did not outperform KNN or Decision Tree on test accuracy. |
 
-KNN achieved the strongest overall test performance among the five evaluated models.
+## 7. Generalization Gap Analysis
 
-Key results:
+The accuracy generalization gap is calculated as training accuracy minus testing accuracy.
 
-- Accuracy: 94.08%
-- ROC-AUC: 98.33%
-- Precision: 93.97%
-- Recall: 92.31%
-- F1-Score: 93.13%
-- MCC: 0.8795
+| Model | Training Accuracy | Testing Accuracy | Accuracy Gap |
+|---|---:|---:|---:|
+| Logistic Regression | 93.01% | 91.60% | 1.41 percentage points |
+| Decision Tree | 97.86% | 93.99% | 3.87 percentage points |
+| KNN | 98.94% | 94.08% | 4.85 percentage points |
+| Gaussian Naive Bayes | 91.03% | 90.11% | 0.92 percentage points |
+| Support Vector Machine | 93.17% | 91.69% | 1.48 percentage points |
 
-The Decision Tree achieved slightly higher precision (94.33%), while KNN performed better on accuracy, ROC-AUC, recall, F1-score, and MCC.
+KNN achieved the strongest test performance but also the largest accuracy gap. This indicates a greater difference between training and unseen-test performance and should be considered when interpreting the result.
 
-Therefore, KNN was selected as the final model based on its overall test performance.
+## 8. Overall Winner
 
-## 7. Deployment
+**Selected model: K-Nearest Neighbors (KNN)**
 
-The selected KNN pipeline was serialized using Joblib and integrated into a Streamlit web application.
+KNN was selected based on its overall held-out test performance. It achieved the highest accuracy, AUC, recall, F1 Score, and MCC among the five required classifiers. Decision Tree achieved slightly higher precision (94.33% compared with 93.97%).
 
-The application allows users to:
-- Enter encoded website feature values.
-- Submit the features for prediction.
-- View the predicted classification.
-- View the model-estimated phishing probability.
+KNN's training-testing accuracy gap was larger than the other models, so this limitation is acknowledged.
 
-**Live Application:** [Open Streamlit App](https://phishingwebsitedetection-ml.streamlit.app/)
+## 9. Streamlit Application
 
-## 8. Limitations and Future Improvements
+**Live application:** [Open PhishGuard – Streamlit Community Cloud](https://phishingwebsitedetection-ml.streamlit.app/)
 
-- The application currently accepts pre-extracted, encoded feature values rather than automatically analyzing a raw URL.
-- The model's performance depends on the dataset and feature representation used during training.
-- Future work could include automatic URL feature extraction, testing on newer phishing datasets, additional algorithms, and further model optimization.
+The application loads the saved classification pipelines and evaluates an uploaded test CSV without retraining. It provides:
 
-## 9. Conclusion
+- CSV test-dataset upload
+- Model-selection dropdown
+- Six evaluation metrics
+- Confusion matrix
+- Classification report
+- Comparison of the five models
+- Downloadable prediction results
 
-This project demonstrates the application of machine learning techniques to phishing website detection. Five classification algorithms were trained, tuned, and evaluated using multiple performance metrics.
+The uploaded test CSV must contain all required input features and the `is_phishing` target column.
 
-Among the evaluated models, KNN achieved the strongest overall test performance, with 94.08% accuracy and a 93.13% F1-score. The trained pipeline was saved and integrated into a Streamlit application to demonstrate model deployment.
+## 10. Technologies Used
 
-The project provides an end-to-end machine learning workflow, from dataset analysis and model evaluation to application development.
+- Python
+- Pandas and NumPy
+- Scikit-learn
+- Matplotlib
+- Joblib
+- Streamlit
+- GitHub
+
+## 11. Conclusion
+
+This project demonstrates an end-to-end machine-learning workflow for phishing website detection, including dataset analysis, group-aware data splitting, model implementation, hyperparameter tuning, evaluation, model serialization, and deployment.
+
+Among the five required classifiers, KNN achieved the strongest overall held-out test performance, with 94.08% accuracy and a 93.13% F1 Score. The saved model pipelines are integrated into the Streamlit application to demonstrate evaluation on uploaded test data without retraining.
